@@ -26,6 +26,8 @@ button{font-family:inherit;cursor:pointer}
 .btn{background:var(--orange);color:#fff;border:none;border-radius:100px;padding:9px 24px;font-weight:800;font-size:16.5px;transition:.2s;box-shadow:0 6px 16px rgba(217,119,6,.25)}
 .btn:hover{transform:translateY(-2px)}
 .btn.ghost{background:var(--cream);color:var(--green);border:1.5px solid var(--line);box-shadow:none}
+.btn.danger{background:var(--cream);color:#B4513E;border:1.5px solid #B4513E;box-shadow:none}
+.btn.danger:hover{background:#B4513E;color:#fff}
 .stage{max-width:1180px;margin:26px auto 0;padding:0 30px}
 .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;align-items:end}
 .col{text-align:center}
@@ -61,6 +63,7 @@ button{font-family:inherit;cursor:pointer}
     <div class="pill">المشاركون: <b id="tot">٠</b></div>
     <button class="btn" id="qrbtn">🔳 رمزُ الاختبار</button>
     <button class="btn ghost" id="fsb">ملءُ الشَّاشة</button>
+    <button class="btn danger" id="rsb">🗑 تصفيرُ النَّتائج</button>
   </div>
 </header>
 
@@ -2405,7 +2408,7 @@ function fsRead(){
   }
   return fetch(FS_URL + '?pageSize=300&key=' + VAK_CONFIG.API_KEY)
     .then(r=>r.json())
-    .then(j=>(j.documents||[]).map(d=>{const f=d.fields||{};return {
+    .then(j=>(j.documents||[]).map(d=>{const f=d.fields||{};return {_doc:d.name,
       name:f.name?.stringValue||'؟', type:f.type?.stringValue||'؟', s:f.s?.stringValue||'',
       v:+(f.v?.integerValue||0), a:+(f.a?.integerValue||0), k:+(f.k?.integerValue||0),
       ts:+(f.ts?.integerValue||0)};}));
@@ -2457,6 +2460,31 @@ document.getElementById('qrbtn').addEventListener('click',()=>{
 });
 document.getElementById('fsb').addEventListener('click',()=>{
   document.fullscreenElement? document.exitFullscreen(): document.documentElement.requestFullscreen();
+});
+function fsResetSession(){
+  if(!FS_ON){
+    const arr = JSON.parse(localStorage.getItem('vak-demo')||'[]').filter(x=>x.s!==S);
+    localStorage.setItem('vak-demo', JSON.stringify(arr));
+    return Promise.resolve(0);
+  }
+  return fsRead().then(rows=>{
+    const mine = rows.filter(x=>x.s===S && x._doc);
+    return Promise.all(mine.map(x=>
+      fetch('https://firestore.googleapis.com/v1/' + x._doc + '?key=' + VAK_CONFIG.API_KEY, {method:'DELETE'})
+    )).then(()=>mine.length);
+  });
+}
+document.getElementById('rsb').addEventListener('click',()=>{
+  if(!confirm('هل تريدُ حذفَ جميعِ نتائجِ هذهِ الجلسةِ («'+S+'») والبدءَ من جديد؟')) return;
+  const b=document.getElementById('rsb');
+  b.disabled=true; b.textContent='جارٍ التَّصفير…';
+  fsResetSession().then(cnt=>{
+    b.disabled=false; b.textContent='🗑 تصفيرُ النَّتائج';
+    tick();
+  }).catch(()=>{
+    b.disabled=false; b.textContent='🗑 تصفيرُ النَّتائج';
+    document.getElementById('lv').textContent='تعذَّرَ التَّصفير - حاولْ مجدَّدًا';
+  });
 });
 if(new URLSearchParams(location.search).get('demo')){
   const demo=[['أحمد','البصريّ',6,2,1],['نورة','السَّمعيّ',2,5,2],['خالد','الحسِّيّ',1,2,6],['مريم','البصريّ',5,3,1],
