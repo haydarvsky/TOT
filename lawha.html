@@ -56,6 +56,9 @@ input[type=text]:focus{outline:none;border-color:var(--orange)}
 .rnote{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 18px;margin-top:18px;font-size:17px;text-align:right}
 .rnote b{color:var(--orange)}
 #result .done{margin-top:18px;background:var(--green);color:var(--cream);border-radius:100px;padding:11px 30px;display:inline-block;font-weight:800;font-size:17.5px}
+#again{font-family:inherit;display:block;width:100%;margin-top:22px;background:var(--orange);color:#fff;border:none;border-radius:100px;padding:14px 20px;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 10px 24px rgba(217,119,6,.3);transition:.25s}
+#again:hover{transform:translateY(-2px)}
+#result .morehint{color:var(--muted);font-size:15.5px;margin-top:8px}
 .conf{position:fixed;top:-20px;z-index:99;border-radius:3px;pointer-events:none;animation:cfall linear both}
 @keyframes cfall{to{transform:translateY(110vh) rotate(720deg)}}
 .foot{text-align:center;color:var(--muted);font-size:15px;margin-top:34px}
@@ -103,6 +106,8 @@ input[type=text]:focus{outline:none;border-color:var(--orange)}
   <div id="rcat"></div>
   <div class="rnote"><b>ماذا بعد؟</b> عندما تكتملُ اللَّمسات، سيركِّبُ المدرِّبُ من كلماتِكم جميعًا <b>برومبتًا واحدًا</b>… ويولِّدُ منهُ لوحةَ القاعةِ أمامَكم مباشرة!</div>
   <div class="done">انظُرْ للشَّاشةِ الآن 👀 كلمتُك تطفو عليها</div>
+  <button id="again">➕ أضِفْ لمسةً أخرى</button>
+  <div class="morehint">لا حدودَ للَّمسات - كلَّما أضفتَ، اغتنتِ اللَّوحة!</div>
 </div>
 
 <div class="foot">أ. حيدر المعاتيق - مدرِّبٌ دوليٌّ معتمَدٌ بالذَّكاءِ الاصطناعيّ</div>
@@ -190,6 +195,20 @@ document.getElementById('send').addEventListener('click',()=>{
     btn.disabled=false; btn.textContent='أضِفْ لمستي إلى اللَّوحة ✦';
     document.getElementById('msg').textContent='تعذَّرَ الإرسال - تأكَّدْ منَ الإنترنت وحاولْ مجدَّدًا';
   });
+});
+
+document.getElementById('again').addEventListener('click',()=>{
+  /* عودة للنموذج: الاسم يبقى، والفئة والكلمة تُصفَّران للمسة الجديدة */
+  document.querySelectorAll('.cat').forEach(x=>x.classList.remove('sel'));
+  catSel=null;
+  word.value=''; document.getElementById('wprev').innerHTML='';
+  const btn=document.getElementById('send');
+  btn.textContent='أضِفْ لمستي إلى اللَّوحة ✦';
+  document.getElementById('msg').textContent='';
+  document.getElementById('result').style.display='none';
+  document.getElementById('form').style.display='block';
+  update();
+  window.scrollTo(0,0);
 });
 
 if(new URLSearchParams(location.search).get('rdemo')){
